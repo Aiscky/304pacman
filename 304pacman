@@ -83,10 +83,15 @@ def getShortestPathMatrix(pacmanMap, phantomPos):
 	for candidate in candidates:
 		print str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
 
+	i = 0
+
 	while (len(candidates) != 0):
+		#if i == 4:
+		#	return
 		candidate = searchBestCandidate(pacmanMap, candidates, phantomPos)
 		if (addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, candidate) == True):
 			return
+		i = i + 1
 
 #search for best candidate
 
@@ -94,18 +99,21 @@ def searchBestCandidate(pacmanMap, candidates, phantomPos):
 	index = -1
 	dist = float('Inf')
 
+	print "["
+
 	for x in range(len(candidates)):
 		if candidates[x][2] < dist:
 			index = x
 			dist = candidates[x][2]
+		print " [" + str(candidates[x][0]) + " " + str(candidates[x][1]) + " " + str(candidates[x][2]) + "]"
 
-	candidate = candidates[x]
+	print "]"
 
-	print "candidatelen " + str(len(candidates))
 
-	candidates.pop(x)
+	print str(index)
 
-	print "candidatelen2 " + str(len(candidates))
+	candidate = candidates[index]
+	candidates.pop(index)
 
 	return candidate
 
@@ -167,10 +175,8 @@ def addCandidate(phantomPos, pacmanMap, candidates, candidate):
 
 	#insert to have list sorted
 
-	print "CANDIDAT " + str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
-
 	for x in range(len(candidates)):
-		if candidates[x][1] - phantomPos[1] <= 0 and candidate[1] - phantomPos[1] >= 0:
+		if candidates[x][1] - phantomPos[1] < 0 and candidate[1] - phantomPos[1] > 0:
 			candidates.insert(x, candidate)
 			break;
 		elif candidates[x][1] - phantomPos[1] > 0 and candidate[1] - phantomPos[1] > 0:
