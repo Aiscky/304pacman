@@ -1,0 +1,208 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import math
+import re
+
+NUM_PARAMS = 4
+
+#F phantom position
+#P player position
+#0 is empty space
+#1 is wall
+
+#parsing file
+
+def getPacmanMap(filename):
+	mapWidth = 0
+	playerPos = (-1,-1)
+	phantomPos = (-1,-1)
+	pacmanMap = list()
+
+	try:
+		f = open(filename, "r")
+	except IOError:
+		sys.stderr.write("Failed to open file : " + filename + "\n");
+		exit(84)
+	for y, line in enumerate(f.read().splitlines()):
+		print line
+		if (mapWidth == 0):
+			mapWidth = len(line)
+		elif (mapWidth != len(line)):
+			sys.stderr.write("Unconsistent map width size")
+			exit(84)
+		pacmanMap.append([0 for x in range(mapWidth)])
+		for x, c in enumerate(line):
+			if (c == "P"):
+				playerPos = (y, x)
+			elif (c == "F"):
+				phantomPos = (y, x)
+			elif (c == '1'):
+				c = 'W'
+			elif (c != "0"):
+				sys.stderr.write("Unvalid character : " + c + "\n")
+				exit(84)
+			pacmanMap[y][x] = c
+
+	if (playerPos == (-1,-1)):
+		sys.stderr.write("Player not found\n")
+		exit(84)
+	if (phantomPos == (-1,-1)):
+		sys.stderr.write("Phantom not found\n")
+		exit(84)
+
+	#Creating result list
+	
+	result = list()
+	result.append(phantomPos)
+	result.append(pacmanMap)
+
+	return result
+
+#shortest path algorithm
+
+def getShortestPathMatrix(pacmanMap, phantomPos):
+	usedMatrix = [[0 for x in range(len(pacmanMap[0]))] for x in range(len(pacmanMap))]
+	candidates = list()
+
+	#setmatrix
+
+	for y in range(len(usedMatrix)):
+		for x in range(len(usedMatrix[y])):
+			if pacmanMap[y][x] != 'W':
+				usedMatrix[y][x] = True
+			else:
+				usedMatrix[y][x] = False
+
+	#setbasicandidates
+
+	if (addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, (phantomPos[0], phantomPos[1], 0)) == True):
+		return
+
+	for candidate in candidates:
+		print str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
+
+	while (len(candidates) != 0):
+		candidate = searchBestCandidate(pacmanMap, candidates, phantomPos)
+		if (addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, candidate) == True):
+			return
+
+#search for best candidate
+
+def searchBestCandidate(pacmanMap, candidates, phantomPos):
+	index = -1
+	dist = float('Inf')
+
+	for x in range(len(candidates)):
+		if candidates[x][2] < dist:
+			index = x
+			dist = candidates[x][2]
+
+	candidate = candidates[x]
+
+	print "candidatelen " + str(len(candidates))
+
+	candidates.pop(x)
+
+	print "candidatelen2 " + str(len(candidates))
+
+	return candidate
+
+#add new candidates
+
+def addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, square):
+	usedMatrix[square[0]][square[1]] = False
+	if (square[0] - 1 >= 0 and usedMatrix[square[0] - 1][square[1]]):
+		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0] - 1, square[1], square[2] + 1)) == True):
+			return True
+	if (square[1] + 1 < len(pacmanMap[square[0]]) and usedMatrix[square[0]][square[1] + 1]):
+		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0], square[1] + 1, square[2] + 1)) == True):
+			return True
+	if (square[0] + 1 < len(pacmanMap) and usedMatrix[square[0] + 1][square[1]]):
+		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0] + 1, square[1], square[2] + 1)) == True):
+			return True
+	if (square[1] - 1 >= 0  and usedMatrix[square[0]][square[1] - 1]):
+		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0], square[1] - 1, square[2] + 1)) == True):
+			return True
+	return False
+
+def addCandidate(phantomPos, pacmanMap, candidates, candidate):
+
+	#is candidate Player
+
+	if (pacmanMap[candidate[0]][candidate[1]] == 'P'):
+		return True
+
+	for x in range(len(candidates)):
+		if candidates[x][0] == candidate[0] and candidates[x][1] == candidate[1]:
+			if candidates[x][2] > candidate[2]:
+				candidates[x] = tuple(candidate)
+				pacmanMap[candidate[0]][candidate[1]] = candidate[2]
+			else:
+				return False
+
+	#insert to have list sorted
+
+	print "CANDIDAT " + str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
+
+	for x in range(len(candidates)):
+		if candidates[x][1] - phantomPos[1] <= 0 and candidate[1] - phantomPos[1] >= 0:
+			candidates.insert(x, candidate)
+			break;
+		elif candidates[x][1] - phantomPos[1] > 0 and candidate[1] - phantomPos[1] > 0:
+			if (candidates[x][0] - phantomPos[0] <= 0 and candidate[0] - phantomPos[0] >= 0):
+				candidates.insert(x, candidate)
+				break;
+			elif (candidates[x][0] - phantomPos[0] >= 0 and candidate[0] - phantomPos[0] >= 0 and candidates[x][0] - phantomPos[0] - (candidates[x][1] - phantomPos[1]) < candidate[0] - phantomPos[0] - (candidate[1] - phantomPos[1])):
+				candidates.insert(x, candidate)
+				break;
+			elif (candidates[x][0] - phantomPos[0] < 0 and candidate[0] - phantomPos[0] < 0 and candidates[x][0] - phantomPos[0] + (candidates[x][1] - phantomPos[1]) < candidate[0] - phantomPos[0] + (candidate[1] - phantomPos[1])):
+				candidates.insert(x, candidate)
+				break;
+		elif candidates[x][1] - phantomPos[1] < 0 and candidate[1] - phantomPos[1] < 0:
+			if (candidates[x][0] - phantomPos[0] >= 0 and candidate[0] - phantomPos[0] <= 0):
+				candidates.insert(x, candidate)
+				break;
+			elif (candidates[x][0] - phantomPos[0] >= 0 and candidate[0] - phantomPos[0] >= 0 and candidates[x][0] - phantomPos[0] + (candidates[x][1] - phantomPos[1]) > candidate[0] - phantomPos[0] + (candidate[1] - phantomPos[1])):
+				candidates.insert(x, candidate)
+				break;
+			elif (candidates[x][0] - phantomPos[0] < 0 and candidate[0] - phantomPos[0] < 0 and candidates[x][0] - phantomPos[0] - (candidates[x][1] - phantomPos[1]) > candidate[0] - phantomPos[0] - (candidate[1] - phantomPos[1])):
+				candidates.insert(x, candidate)
+				break;
+		if (x == len(candidates) - 1):
+			candidates.append(candidate)
+
+	if len(candidates) == 0:
+		candidates.append(candidate)
+
+	pacmanMap[candidate[0]][candidate[1]] = candidate[2]
+	return False
+
+#main
+
+if __name__ == "__main__":
+	if (len(sys.argv) == NUM_PARAMS):
+		result = getPacmanMap(sys.argv[1])
+		phantomPos = result[0]
+		pacmanMap = result[1]
+
+		print str(phantomPos[0]) + " " + str(phantomPos[1])
+
+		for y in range(len(pacmanMap)):
+			for x in range(len(pacmanMap[y])):
+				print pacmanMap[y][x],
+			print ""
+
+		getShortestPathMatrix(pacmanMap, phantomPos)
+
+		for y in range(len(pacmanMap)):
+			for x in range(len(pacmanMap[y])):
+				if (pacmanMap[y][x] != 'W' and pacmanMap[y][x] != 'P' and pacmanMap[y][x] != 'F'):
+					print str(int(pacmanMap[y][x]) % 10),
+				else:
+					print pacmanMap[y][x],
+			print ""		
+
+	else:
+		print "Usage: ./304pacman file wallchar emptychar"
