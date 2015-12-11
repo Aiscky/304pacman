@@ -116,16 +116,39 @@ def addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, square):
 	if (square[0] - 1 >= 0 and usedMatrix[square[0] - 1][square[1]]):
 		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0] - 1, square[1], square[2] + 1)) == True):
 			return True
+	elif (square[0] - 1 >= 0 and usedMatrix[square[0] - 1][square[1]] == False and square[2] + 1 < pacmanMap[square[0] - 1][square[1]] and testCharacter(pacmanMap[square[0] - 1][square[1]])):
+		pacmanMap[square[0] - 1][square[1]] = square[2] + 1
+
 	if (square[1] + 1 < len(pacmanMap[square[0]]) and usedMatrix[square[0]][square[1] + 1]):
 		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0], square[1] + 1, square[2] + 1)) == True):
 			return True
+	elif square[1] + 1 < len(pacmanMap[square[0]]) and usedMatrix[square[0]][square[1] + 1] == False and square[2] + 1 < pacmanMap[square[0]][square[1] + 1] and testCharacter(pacmanMap[square[0]][square[1] + 1]):
+		pacmanMap[square[0]][square[1] + 1] = square[2] + 1
+
 	if (square[0] + 1 < len(pacmanMap) and usedMatrix[square[0] + 1][square[1]]):
 		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0] + 1, square[1], square[2] + 1)) == True):
 			return True
+	elif (square[0] + 1 < len(pacmanMap) and usedMatrix[square[0] + 1][square[1]] == False and square[2] + 1 < pacmanMap[square[0] + 1][square[1]] and testCharacter(pacmanMap[square[0] + 1][square[1]])):
+		pacmanMap[square[0] + 1][square[1]] = square[2] + 1
+
 	if (square[1] - 1 >= 0  and usedMatrix[square[0]][square[1] - 1]):
 		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0], square[1] - 1, square[2] + 1)) == True):
 			return True
+	elif (square[1] - 1 >= 0  and usedMatrix[square[0]][square[1] - 1] == False and square[2] + 1 < pacmanMap[square[0]][square[1] - 1] and testCharacter(pacmanMap[square[0]][square[1] - 1])):
+		pacmanMap[square[0]][square[1] - 1] = square[2] + 1
+
 	return False
+
+#test c
+
+def testCharacter(c):
+	if (c == 'W'):
+		return False
+	if (c == 'P'):
+		return False
+	if (c == 'F'):
+		return False
+	return True
 
 def addCandidate(phantomPos, pacmanMap, candidates, candidate):
 
@@ -176,7 +199,8 @@ def addCandidate(phantomPos, pacmanMap, candidates, candidate):
 	if len(candidates) == 0:
 		candidates.append(candidate)
 
-	pacmanMap[candidate[0]][candidate[1]] = candidate[2]
+	if (pacmanMap[candidate[0]][candidate[1]] == 0 or pacmanMap[candidate[0]][candidate[1]] > candidate[2]):
+		pacmanMap[candidate[0]][candidate[1]] = candidate[2]
 	return False
 
 #main
