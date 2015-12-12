@@ -26,7 +26,6 @@ def getPacmanMap(filename):
 		sys.stderr.write("Failed to open file : " + filename + "\n");
 		exit(84)
 	for y, line in enumerate(f.read().splitlines()):
-		print line
 		if (mapWidth == 0):
 			mapWidth = len(line)
 		elif (mapWidth != len(line)):
@@ -57,12 +56,13 @@ def getPacmanMap(filename):
 	result = list()
 	result.append(phantomPos)
 	result.append(pacmanMap)
+	result.append(playerPos)
 
 	return result
 
 #shortest path algorithm
 
-def getShortestPathMatrix(pacmanMap, phantomPos):
+def getShortestPathMatrix(pacmanMap, phantomPos, playerPos):
 	usedMatrix = [[0 for x in range(len(pacmanMap[0]))] for x in range(len(pacmanMap))]
 	candidates = list()
 
@@ -77,19 +77,17 @@ def getShortestPathMatrix(pacmanMap, phantomPos):
 
 	#setbasicandidates
 
-	if (addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, (phantomPos[0], phantomPos[1], 0)) == True):
+	if (addCandidates(playerPos, phantomPos, pacmanMap, usedMatrix, candidates, (phantomPos[0], phantomPos[1], 0)) == True):
 		return
 
-	for candidate in candidates:
-		print str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
+	#for candidate in candidates:
+	#	print str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2])
 
 	i = 0
 
 	while (len(candidates) != 0):
-		#if i == 4:
-		#	return
 		candidate = searchBestCandidate(pacmanMap, candidates, phantomPos)
-		if (addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, candidate) == True):
+		if (addCandidates(playerPos, phantomPos, pacmanMap, usedMatrix, candidates, candidate) == True):
 			return
 		i = i + 1
 
@@ -99,18 +97,18 @@ def searchBestCandidate(pacmanMap, candidates, phantomPos):
 	index = -1
 	dist = float('Inf')
 
-	print "["
+	#print "["
 
 	for x in range(len(candidates)):
 		if candidates[x][2] < dist:
 			index = x
 			dist = candidates[x][2]
-		print " [" + str(candidates[x][0]) + " " + str(candidates[x][1]) + " " + str(candidates[x][2]) + "]"
+		#print " [" + str(candidates[x][0]) + " " + str(candidates[x][1]) + " " + str(candidates[x][2]) + "]"
 
-	print "]"
+	#print "]"
 
 
-	print str(index)
+	#print str(index)
 
 	candidate = candidates[index]
 	candidates.pop(index)
@@ -119,7 +117,7 @@ def searchBestCandidate(pacmanMap, candidates, phantomPos):
 
 #add new candidates
 
-def addCandidates(phantomPos, pacmanMap, usedMatrix, candidates, square):
+def addCandidates(playerPos, phantomPos, pacmanMap, usedMatrix, candidates, square):
 	usedMatrix[square[0]][square[1]] = False
 	if (square[0] - 1 >= 0 and usedMatrix[square[0] - 1][square[1]]):
 		if (addCandidate(phantomPos, pacmanMap, candidates, (square[0] - 1, square[1], square[2] + 1)) == True):
@@ -175,7 +173,10 @@ def addCandidate(phantomPos, pacmanMap, candidates, candidate):
 
 	#insert to have list sorted
 
+	#print  "[ " + str(candidate[0]) + " " + str(candidate[1]) + " " + str(candidate[2]) + " ]"
+
 	for x in range(len(candidates)):
+		#print str(candidates[x][0]) + " " + str(candidates[x][1]) + " " + str(candidates[x][2])
 		if candidates[x][1] - phantomPos[1] < 0 and candidate[1] - phantomPos[1] > 0:
 			candidates.insert(x, candidate)
 			break;
@@ -202,6 +203,7 @@ def addCandidate(phantomPos, pacmanMap, candidates, candidate):
 		if (x == len(candidates) - 1):
 			candidates.append(candidate)
 
+
 	if len(candidates) == 0:
 		candidates.append(candidate)
 
@@ -216,15 +218,11 @@ if __name__ == "__main__":
 		result = getPacmanMap(sys.argv[1])
 		phantomPos = result[0]
 		pacmanMap = result[1]
+		playerPos = result[2]
 
-		print str(phantomPos[0]) + " " + str(phantomPos[1])
+		#print str(phantomPos[0]) + " " + str(phantomPos[1])
 
-		for y in range(len(pacmanMap)):
-			for x in range(len(pacmanMap[y])):
-				print pacmanMap[y][x],
-			print ""
-
-		getShortestPathMatrix(pacmanMap, phantomPos)
+		getShortestPathMatrix(pacmanMap, phantomPos, playerPos)
 
 		for y in range(len(pacmanMap)):
 			for x in range(len(pacmanMap[y])):
